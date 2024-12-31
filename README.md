@@ -1,75 +1,43 @@
-:nerd_face:
-A well-written README provides essential information about your project,
-such as installation instructions, usage examples and contributions guidelines.
+# Brain MRI Analysis with Harvard-Oxford Atlas
 
-# List of usefull commands:
-all command should run under project root/working-directory
+This project analyzes differences in brain MRI scans across two time points (baseline and follow-up). Using the Harvard-Oxford cortical atlas, it identifies brain regions with significant changes and provides statistical insights.
 
-## On first run:
-```bash 
-#install Virtualenv is - a tool to set up your Python environments
-pip install virtualenv
-#create virtual environment (serve only this project):
-python -m venv venv
-#activate virtual environment
-source ./venv/bin/activate   
-+ (venv) should appear as prefix to all command (run next command just after activating venv)
-#update venv's python package-installer (pip) to its latest version
-pip install --upgrade pip
-#install projects packages
-pip install -e .[dev]     
-``` 
+## Features
 
-## Modify package dependencies (add/remove/update external modules/packages):
-#### Add new module:
-1. Add package to pyproject.toml
-2. Run:
-```bash 
-pip install -e .[dev]
-``` 
+- Preprocesses MRI images (resampling, smoothing).
+- Computes voxel-wise differences between baseline and follow-up scans.
+- Maps changes to brain regions using the Harvard-Oxford atlas.
+- Outputs a ranked list of regions by mean change.
+- Supports modular and Object-Oriented Programming (OOP) design for extensibility.
 
-#### Remove new module:
-1. Remove the package from pyproject.toml
-2. Run:
-```bash 
-pip uninstall <package-name>
-```
-note: if you're don't remember the exact package name copy it from: 
-```bash
-pip list
-```
+## Project Structure
+├── Data/
+│   ├── sub-213/
+│   │   ├── ses-BL/anat/sub-213_ses-BL_T1w.nii.gz
+│   │   ├── ses-FU/anat/sub-213_ses-FU_T1w.nii.gz
+│   ├── sub-222/
+│       ├── ses-BL/anat/sub-222_ses-BL_T1w.nii.gz
+│       ├── ses-FU/anat/sub-222_ses-FU_T1w.nii.gz
+├── Scripts/
+│   ├── atlas_processing.py
+│   ├── image_processing.py
+├── results/
+│   ├── sub-213_results.txt
+│   ├── sub-222_results.txt
+├── README.md
+└── .gitignore
 
-#### Steps in case of a package failure:
-Cases like package installation interuppted in the middle or something like that
-1. Try to remove package and install it again.
-2. If it doesn't help delete venv folder 
-3. repeat 'On first run' steps
+1.	Atlas Loading
+The Harvard-Oxford cortical atlas is used to map MRI voxels to specific brain regions.
+	2.	Image Processing
+	•	MRI images are resampled to align with the atlas.
+	•	A Gaussian smoothing filter is applied to reduce noise.
+	3.	Difference Computation
+	•	Voxel-wise differences between baseline and follow-up images are calculated.
+	4.	Region Analysis
+	•	Changes are aggregated by brain region using the atlas.
+	•	A ranked list of regions with mean changes is generated.
 
+License
 
-## Health check (Lint/Tests/Tests-Coverage):
-#### Lint Project:
-Check formatting, type hinting, lint code & docstrings
-```bash
-tox run -e lint
-```
-#### Test Project: 
-Run all tests on diffrent python versions and produce tests-coverage and tests-results reports (make sure tested versions installed before run):
-```bash
-tox run -f test
-```
-#### Lint and Test project (on diffrent python versions):
-```bash
-tox run
-```
-
-## Build/pack the project (should run on every version change)
-```bash
-python -m build
-```
-
-### $${\color{red} TBD}$$:
-#### Package documentation:
-```bash
-tox run -e docs
-```
-
+This project is open-source and available under the MIT License.
