@@ -131,6 +131,8 @@ env.bak/
 venv.bak/
 Data
 Data/
+.DS_Store
+.bidsignore
 
 # Spyder project settings
 .spyderproject
