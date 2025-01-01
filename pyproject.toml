@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "xlsxwriter",
     "ants",
     "openpyxl",
     "seaborn",
