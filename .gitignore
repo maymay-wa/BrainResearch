@@ -134,6 +134,7 @@ Data/
 .DS_Store
 .bidsignore
 output
+rigid
 # Spyder project settings
 .spyderproject
 .spyproject
