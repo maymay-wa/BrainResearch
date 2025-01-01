@@ -65,17 +65,7 @@ def register_and_convert_to_nifti(fixed_image, moving_image, transform_type='Rig
         moving=moving_image,
         type_of_transform=transform_type
     )['warpedmovout']
-
-    # Extract voxel data and spacing from the registered image
-    voxel_data = registered.numpy()  # Voxel data as NumPy array
-    spacing = registered.spacing  # Voxel spacing (dx, dy, dz)
-    origin = registered.origin  # Image origin (x, y, z)
-    
-    # Construct a 4x4 affine matrix
-    affine = np.eye(4)  # Identity matrix
-    affine[:3, :3] = np.diag(spacing)  # Set voxel spacing
-    affine[:3, 3] = origin  # Set translation (origin)
-    # Create and return a NIfTI image
+    registered_nifti = registered.to_nibabel()
     return nib.Nifti1Image(voxel_data, affine)
 
 def loadImage(imgPath):
