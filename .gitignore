@@ -133,7 +133,7 @@ Data
 Data/
 .DS_Store
 .bidsignore
-
+output
 # Spyder project settings
 .spyderproject
 .spyproject
