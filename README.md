@@ -52,10 +52,4 @@ This project processes and analyzes differences in brain MRI scans between two t
 
 ## **Key Code Components**
 ### **1. Excel Export and Visualization**
-The pipeline exports the results to an Excel file, making it easy to explore and share. The file opens automatically on macOS after generation.
-
-```python
-import subprocess
-output_excel_path = 'participants_with_changes.xlsx'
-participants_df.to_excel(output_excel_path, index=False)
-subprocess.run(["open", output_excel_path])
+The pipeline exports the results to an Excel file, making it easy to explore and share.
