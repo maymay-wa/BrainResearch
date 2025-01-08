@@ -19,10 +19,13 @@ with Diagram("MRI Processing & Analysis Pipeline", show=False, direction="LR"):
 
     # 2-4. Preprocessing
     with Cluster("Preprocess MRI Images"):
-        n4_correction = DataPipeline("N4 Bias Field Correction")
+        n4_correction = Glue("N4 Bias Field Correction")
         n4_correction - Glue("Noise Smoothing")
-        n4_correction - DataPipeline("Register to Atlas")
         
+
+    with Cluster("Match Images to Template"):   
+        register = DataPipeline("Register to Atlas")
+        register - DataPipeline("Resample to Atlas")
     # 5-5.5. Region & Volume Analysis
     with Cluster("Region & Volume Analysis"):
         region_isolation = Sagemaker("Brain Region Isolation")
@@ -35,5 +38,6 @@ with Diagram("MRI Processing & Analysis Pipeline", show=False, direction="LR"):
 
     # Flow Connections
     find_files >> n4_correction
-    n4_correction >> region_isolation
+    n4_correction >> register
+    register >> region_isolation
     region_isolation >> stat_analysis
