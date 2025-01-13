@@ -288,19 +288,3 @@ class DataPipe:
         plot_anat(followup_img, title="Follow-Up MRI")
         plot_anat(baseline_img, title="Baseline MRI")
         plt.show()
-
-
-if __name__ == "__main__":
-    # Example usage of the Data class:
-    
-    # 1. Instantiate the Data class
-    data_processor = Data(
-        data_dir='Data', 
-        participants_tsv='Data/participants.tsv'
-    )
-    
-    # 2. Match subject file pairs
-    data_processor.get_subject_file_pairs()
-    
-    # 3. Process all subjects (registration + volume calculations)
-    data_processor.process_all_subjects()
