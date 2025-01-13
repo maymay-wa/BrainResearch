@@ -1,7 +1,6 @@
 import os
 import ants
 import logging
-import subprocess
 import numpy as np
 import pandas as pd
 import nibabel as nib
