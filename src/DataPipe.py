@@ -172,7 +172,8 @@ class DataPipe:
         """
         # Path to your local Harvard-Oxford atlas file if needed:
         # (Should match what's inside your `fetch_atlas_harvard_oxford` location)
-        atlas_image = self.ATLAS_IMAGE
+        atlasPath = '/Users/mayerunterberg/nilearn_data/fsl/data/atlases/HarvardOxford/HarvardOxford-cort-maxprob-thr25-1mm.nii.gz'
+        atlas_image = ants.image_read(atlasPath)
         ants_img = ants.image_read(imgPath)
         
         # Register and convert to NIfTI
