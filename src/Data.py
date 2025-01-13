@@ -26,20 +26,10 @@ class Data:
 
         self.data_dir = data_dir
         self.participants_tsv = participants_tsv
-        
-        # These will be set when fetch_harvard_oxford_atlas() is called
-        self.ATLAS = None
-        self.ATLAS_IMAGE = None
-        self.ATLAS_DATA = None
-        self.LABEL_NAMES = None
-        self.REGION_LABELS = None
-        
         # Load participants DataFrame
         self.participants_df = pd.read_csv(self.participants_tsv, sep="\t")
-        
         # Fetch atlas upon initialization
         self.fetch_harvard_oxford_atlas()
-        
         # Prepare columns in participants_df for file paths and volumetric data
         self.prepare_dataframe_columns()
 
@@ -255,8 +245,8 @@ class Data:
             avgVolume = round((region_img1_volume + region_img2_volume) / 2, 2)
             
             # Save to the DataFrame
-            self.participants_df.loc[index, f"{region_name} Change"] = region_mean_diff
-            self.participants_df.loc[index, f"{region_name} Volume Avg"] = avgVolume
+            #self.participants_df.loc[index, f"{region_name} Change"] = region_mean_diff
+            #self.participants_df.loc[index, f"{region_name} Volume Avg"] = avgVolume
             self.participants_df.loc[index, f"{region_name} Volume Change"] = region_volume_diff
 
     def process_all_subjects(self):
