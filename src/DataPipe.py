@@ -9,7 +9,7 @@ from nilearn.plotting import plot_anat, plot_img
 from nilearn.datasets import fetch_atlas_harvard_oxford
 from nilearn.image import math_img, resample_to_img, get_data, load_img
 
-class Data:
+class DataPipe:
     def __init__(self, data_dir='Data', participants_tsv='Data/participants.tsv'):
         """
         Constructor for the Data class.
@@ -245,8 +245,8 @@ class Data:
             avgVolume = round((region_img1_volume + region_img2_volume) / 2, 2)
             
             # Save to the DataFrame
-            #self.participants_df.loc[index, f"{region_name} Change"] = region_mean_diff
-            #self.participants_df.loc[index, f"{region_name} Volume Avg"] = avgVolume
+            self.participants_df.loc[index, f"{region_name} Change"] = region_mean_diff
+            self.participants_df.loc[index, f"{region_name} Volume Avg"] = avgVolume
             self.participants_df.loc[index, f"{region_name} Volume Change"] = region_volume_diff
 
     def process_all_subjects(self):
