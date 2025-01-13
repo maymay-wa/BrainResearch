@@ -53,3 +53,7 @@ This project processes and analyzes differences in brain MRI scans between two t
 ## **Key Code Components**
 ### **1. Excel Export and Visualization**
 The pipeline exports the results to an Excel file, making it easy to explore and share.
+
+diagram.py creates the diagram for the project
+
+data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
