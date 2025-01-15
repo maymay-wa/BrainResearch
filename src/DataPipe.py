@@ -289,3 +289,15 @@ class DataPipe:
         plot_anat(followup_img, title="Follow-Up MRI")
         plot_anat(baseline_img, title="Baseline MRI")
         plt.show()
+    
+    def display_before_registry(self, baseline_file, followup_file):
+        """
+        Displays the brain images for baseline, follow-up, and their difference.
+        """
+        baseline_img = nib.load(baseline_file)
+        followup_img = nib.load(followup_file)
+
+        # Plot the follow-up and baseline images
+        plot_anat(followup_img, title="Follow-Up MRI Before Registry")
+        plot_anat(baseline_img, title="Baseline MRI Before Registry")
+        plt.show()
