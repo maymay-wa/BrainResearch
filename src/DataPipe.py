@@ -236,10 +236,12 @@ class DataPipe:
             else:
                 img1_masked = ((img1_data != 0) & regionMask)
                 img2_masked = ((img2_data != 0) & regionMask)
-                
+            
+            # Filters our zero voxels
             region_img1_voxels = np.count_nonzero(img1_masked)
             region_img2_voxels = np.count_nonzero(img2_masked)
             
+            # Calculates region volume
             region_img1_volume = region_img1_voxels * voxel_volume
             region_img2_volume = region_img2_voxels * voxel_volume
             region_volume_diff = round(region_img1_volume - region_img2_volume, 2)
@@ -257,16 +259,19 @@ class DataPipe:
         2. Register them to the atlas space.
         3. Compute differences in each region and update participants_df.
         """
+        # Loads base files
         for idx, row in self.participants_df.iterrows():
             baseLinePath = row['Baseline File Path']
             followUpPath = row['Followup File Path']
             if pd.isna(baseLinePath) or pd.isna(followUpPath):
                 continue  # skip if missing file
             
+            # Registers files
             subject_id = row['participant_id']
             baseLine = self.loadImage(baseLinePath, subject_id, 'BL')
             followUp = self.loadImage(followUpPath, subject_id, 'FU')
             
+            # Computes differences
             self.findDifferingAreasAndVolume(idx, baseLine, followUp)
 
     def display_brain_and_difference(self, baseline_file, followup_file):
@@ -298,6 +303,6 @@ class DataPipe:
         followup_img = nib.load(followup_file)
 
         # Plot the follow-up and baseline images
-        plot_anat(followup_img, title="Follow-Up MRI Before Registry")
-        plot_anat(baseline_img, title="Baseline MRI Before Registry")
+        plot_img(followup_img, title="Follow-Up MRI Before Registry")
+        plot_img(baseline_img, title="Baseline MRI Before Registry")
         plt.show()
