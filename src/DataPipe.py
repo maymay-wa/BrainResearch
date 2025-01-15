@@ -275,7 +275,7 @@ class DataPipe:
         """
         baseline_img = nib.load(baseline_file)
         followup_img = nib.load(followup_file)
-        
+
         baseline_data = baseline_img.get_fdata()
         followup_data = followup_img.get_fdata()
         diff_data = followup_data - baseline_data
