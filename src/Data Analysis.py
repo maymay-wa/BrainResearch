@@ -6,6 +6,7 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from DataPipe import DataPipe
@@ -103,6 +104,53 @@ class CannabisAnalysis:
 
         # Save results to an Excel file
         self.results.to_excel('linear_regression_with_significance.xlsx', index=False)
+    
+    def plot_correlation_heatmap(self):
+        """
+        Generates a heatmap of correlations between brain region volume changes and avg CUDIT score.
+        """
+        print("Generating correlation heatmap...")
+
+        # Select only volume change variables
+        volume_change_cols = [col for col in self.X.columns if "Volume Change" in col]
+        correlation_matrix = self.df[volume_change_cols + ['avg_cudit']].corr()
+
+        # Plot heatmap
+        plt.figure(figsize=(12, 8))
+        sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap="coolwarm", linewidths=0.5)
+        plt.title("Correlation Heatmap: Brain Region Volume Changes & CUDIT Score")
+        plt.show()
+    
+    def run_random_forest(self):
+        """
+        Trains a Random Forest model to predict avg CUDIT score.
+        Displays feature importances.
+        """
+        print("Training Random Forest model...")
+
+        # Train-test split
+        X_train, X_test, y_train, y_test = train_test_split(self.X_imputed, self.y, test_size=0.3, random_state=42)
+
+        # Train the Random Forest model
+        rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+        rf_model.fit(X_train, y_train)
+
+        # Compute R² score
+        y_pred = rf_model.predict(X_test)
+        r2 = r2_score(y_test, y_pred)
+        print(f"Random Forest R² Score: {r2:.4f}")
+
+        # Plot feature importances
+        feature_importances = pd.DataFrame({'Feature': self.X.columns, 'Importance': rf_model.feature_importances_})
+        feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
+
+        plt.figure(figsize=(12, 6))
+        sns.barplot(x=feature_importances['Importance'], y=feature_importances['Feature'], palette='coolwarm')
+        plt.title("Feature Importance from Random Forest Model")
+        plt.xlabel("Importance Score")
+        plt.ylabel("Feature")
+        plt.tight_layout()
+        plt.show()
 
     def plot_top_features(self, p_threshold=0.05, top_n=5):
         """
@@ -139,12 +187,14 @@ class CannabisAnalysis:
         Main function to execute the full pipeline:
         - Preprocess data
         - Run regression
-        - Visualize results
+        - Run Random Forest model
+        - Visualize correlation heatmap
         - Display brain differences for a sample subject
         """
         self.preprocess_data()
         self.run_linear_regression()
-        self.plot_top_features()
+        self.run_random_forest()
+        self.plot_correlation_heatmap()
         self.visualize_brain_differences(subject_id=112)
 
 
