@@ -9,7 +9,16 @@ from nilearn.plotting import plot_anat, plot_img
 from nilearn.datasets import fetch_atlas_harvard_oxford
 from nilearn.image import math_img, resample_to_img, get_data, load_img
 
+
 class DataPipe:
+    '''
+    Responsibilities:
+        •	Handles subject MRI data.
+        •	Manages file paths and participant information.
+        •	Loads and processes neuroimaging data.
+        •	Performs registration of images to a common atlas.
+    '''
+
     def __init__(self, data_dir='Data', participants_tsv='Data/participants.tsv'):
         """
         Constructor for the Data class.
@@ -17,6 +26,13 @@ class DataPipe:
             The root directory containing subject data.
         participants_tsv : str
             Path to the participants.tsv file.
+
+        Key Initialization Steps:
+        •	Sets the working directory.
+        •	Stores paths for data and participant information.
+        •	Loads a participant DataFrame from a .tsv file.
+        •	Fetches the Harvard-Oxford Atlas for regional brain analysis.
+        •	Prepares additional DataFrame columns to store file paths and volumetric data.
         """
         # Sets the working directory to be where the file is found
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,7 +51,18 @@ class DataPipe:
 
     def fetch_harvard_oxford_atlas(self):
         """
-        Fetches and loads the Harvard-Oxford atlas, storing relevant attributes.
+        Purpose:
+        •	Fetches the Harvard-Oxford cortical atlas.
+        •	Loads atlas image and extracts region labels.
+        •	Converts atlas data into a NumPy array.
+        •	Handles exceptions in case the atlas cannot be retrieved.
+
+        Key Variables:
+        •	ATLAS_MAPS: The atlas image.
+        •	ATLAS_IMAGE: Loaded version of ATLAS_MAPS.
+        •	ATLAS_DATA: NumPy representation of the atlas.
+        •	LABEL_NAMES: Names of brain regions.
+        •	REGION_LABELS: Unique region indices.
         """
         # Fetch the Harvard-Oxford atlas
         try:
@@ -54,8 +81,16 @@ class DataPipe:
 
     def prepare_dataframe_columns(self):
         """
-        Adds columns to the participants DataFrame for baseline/follow-up file 
-        paths and the volumetric data for each region.
+        Purpose:
+        •	Adds new columns to the participant DataFrame:
+        •	File paths for MRI images.
+        •	Volume calculations per brain region.
+        •	Changes in volume between baseline and follow-up scans.
+
+        Logic:
+        •	Creates empty placeholders for each region’s volumetric data.
+        •	Uses self.LABEL_NAMES to track which regions to include.
+        •	Skips “Background” and “Unknown Region” labels.
         """
         # Prepare the new columns for file paths
         file_cols = ['Baseline File Path', 'Followup File Path']
@@ -79,6 +114,17 @@ class DataPipe:
         Given a DataFrame of participants and the data directory,
         locate subject baseline (BL) and follow-up (FU) files
         and store them in the DataFrame columns.
+
+        Purpose:
+        •	Iterates through the data_dir to find subjects.
+        •	Searches for baseline (BL) and follow-up (FU) files.
+        •	Stores file paths in self.participants_df.
+
+        Key Steps:
+        1.	Check each subject’s folder.
+        2.	Look for ses-BL and ses-FU folders.
+        3.	Verify files exist.
+        4.	Store relative file paths in the DataFrame.
         """
         # Iterate through the data directory
         for subject_folder in os.listdir(self.data_dir):
@@ -127,6 +173,18 @@ class DataPipe:
         """
         Registers `moving_image` to `fixed_image` using ANTs, writes out the
         transformed result to disk as a NIfTI file, and returns the nibabel image.
+
+        Purpose:
+        •	Uses ANTs to register a subject’s MRI scan to a reference (atlas).
+        •	Saves the registered image as a NIfTI file.
+        •	Handles errors and skips re-registration if output already exists.
+
+        Logic:
+        1.	Check if the output file exists.
+        2.	Apply bias field correction and smoothing.
+        3.	Perform image registration using ANTs.
+        4.	Save the registered image to disk.
+        5.	Return a nibabel-compatible image.
         """
         out_path = f"output/registered_output_sub-{subject_id}_ses-{session}.nii.gz"
         
@@ -169,6 +227,17 @@ class DataPipe:
         """
         Reads an image from a given path, then registers it against the
         Harvard-Oxford atlas, returning a NIfTI image resampled to the atlas space.
+
+        Purpose:
+        •	Reads an MRI image from disk.
+        •	Registers it against the Harvard-Oxford atlas.
+        •	Ensures consistency in shape and resolution using resampling.
+
+        Key Steps:
+        1.	Load the Harvard-Oxford Atlas.
+        2.	Read the subject’s MRI image.
+        3.	Register the image to the atlas space.
+        4.	Resample to match the atlas resolution.
         """
         # Path to your local Harvard-Oxford atlas file if needed:
         # (Should match what's inside your `fetch_atlas_harvard_oxford` location)
@@ -200,6 +269,19 @@ class DataPipe:
         """
         Given two images, computes the difference map, calculates mean difference
         and volume changes per region, and records those metrics in the DataFrame.
+
+        •	Computes difference maps between baseline and follow-up MRI images.
+        •	Calculates mean intensity differences in brain regions.
+        •	Estimates volume changes per region.
+        •	Stores results in self.participants_df.
+
+        Key Steps:
+        1.	Create a difference map: diff = math_img("img1 - img2", img1=img1, img2=img2)
+        2.	Extract region-wise voxel intensities.
+        3.	Compute mean intensity change per region.
+        4.	Calculate volume differences based on voxel count.
+        5.	Update the participant DataFrame.
+
         """
         diff = math_img("img1 - img2", img1=img1, img2=img2)
         diff_data = get_data(diff)
@@ -258,6 +340,19 @@ class DataPipe:
         1. Load baseline and follow-up files.
         2. Register them to the atlas space.
         3. Compute differences in each region and update participants_df.
+
+        Purpose:
+        •	Iterates through the participant DataFrame.
+        •	Loads baseline and follow-up images.
+        •	Registers them to the atlas space.
+        •	Computes regional changes in the brain.
+
+        Logic:
+            1.	Load the images for each subject.
+            2.	Register them to the atlas.
+            3.	Compute volumetric differences.
+            4.	Store changes in the DataFrame.
+
         """
         # Loads base files
         for idx, row in self.participants_df.iterrows():
@@ -276,7 +371,18 @@ class DataPipe:
 
     def display_brain_and_difference(self, baseline_file, followup_file):
         """
-        Displays the brain images for baseline, follow-up, and their difference.
+        Purpose:
+        •	Displays baseline, follow-up, and difference images using nilearn.
+        •	Uses color maps to highlight changes.
+
+        Steps:
+        1.	Load the baseline and follow-up MRI images.
+        2.	Compute the difference image.
+        3.	Plot:
+        •	Baseline MRI
+        •	Follow-Up MRI
+        •	Difference Map (using coolwarm colormap)
+
         """
         baseline_img = nib.load(baseline_file)
         followup_img = nib.load(followup_file)
