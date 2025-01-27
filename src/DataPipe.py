@@ -143,7 +143,7 @@ class DataPipe:
             subject = row['participant_id']
             subject_path = os.path.join(self.data_dir, f"sub-{subject:03d}")
             
-            # Locate BL and FU files
+            # Define expected file paths for baseline and follow-up MRI scans
             baseline_file = os.path.join(
                 subject_path, 
                 'ses-BL', 
@@ -157,7 +157,7 @@ class DataPipe:
                 f"sub-{subject:03d}_ses-FU_T1w.nii.gz"
             )
 
-            # Verify that both files exist
+            # Ensure both files exist before adding them to the DataFrame
             if os.path.exists(baseline_file) and os.path.exists(followup_file):
                 # Add the file paths to the DataFrame
                 self.participants_df.at[index, 'Baseline File Path'] = (
