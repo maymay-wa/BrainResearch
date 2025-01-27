@@ -105,26 +105,10 @@ class CannabisAnalysis:
         # Save results to an Excel file
         self.results.to_excel('linear_regression_with_significance.xlsx', index=False)
     
-    def plot_correlation_heatmap(self):
-        """
-        Generates a heatmap of correlations between brain region volume changes and avg CUDIT score.
-        """
-        print("Generating correlation heatmap...")
-
-        # Select only volume change variables
-        volume_change_cols = [col for col in self.X.columns if "Volume Change" in col]
-        correlation_matrix = self.df[volume_change_cols + ['avg_cudit']].corr()
-
-        # Plot heatmap
-        plt.figure(figsize=(12, 8))
-        sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap="coolwarm", linewidths=0.5)
-        plt.title("Correlation Heatmap: Brain Region Volume Changes & CUDIT Score")
-        plt.show()
-    
     def run_random_forest(self):
         """
         Trains a Random Forest model to predict avg CUDIT score.
-        Displays feature importances.
+        Displays the top 10 most important features.
         """
         print("Training Random Forest model...")
 
@@ -140,13 +124,17 @@ class CannabisAnalysis:
         r2 = r2_score(y_test, y_pred)
         print(f"Random Forest R² Score: {r2:.4f}")
 
-        # Plot feature importances
+        # Get feature importances
         feature_importances = pd.DataFrame({'Feature': self.X.columns, 'Importance': rf_model.feature_importances_})
         feature_importances = feature_importances.sort_values(by='Importance', ascending=False)
 
-        plt.figure(figsize=(12, 6))
-        sns.barplot(x=feature_importances['Importance'], y=feature_importances['Feature'], palette='coolwarm')
-        plt.title("Feature Importance from Random Forest Model")
+        # Select only the top 10 most important features
+        top_10_features = feature_importances.head(10)
+
+        # Plot feature importances
+        plt.figure(figsize=(10, 6))
+        sns.barplot(x=top_10_features['Importance'], y=top_10_features['Feature'], palette='coolwarm')
+        plt.title("Top 10 Feature Importance from Random Forest Model")
         plt.xlabel("Importance Score")
         plt.ylabel("Feature")
         plt.tight_layout()
@@ -194,7 +182,7 @@ class CannabisAnalysis:
         self.preprocess_data()
         self.run_linear_regression()
         self.run_random_forest()
-        self.plot_correlation_heatmap()
+        self.plot_top_features()
         self.visualize_brain_differences(subject_id=112)
 
 
