@@ -3,102 +3,155 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import statsmodels.api as sm
-from DataPipe import DataPipe
 import matplotlib.pyplot as plt
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
+from DataPipe import DataPipe
+
+# Suppress warnings related to DataFrame concatenation
 warnings.filterwarnings("ignore", message="The behavior of DataFrame concatenation with empty or all-NA entries")
 
-# # First we run the Data Pipe Object to recieve the results of the Data Pipeline
-# Initialize the Data class with the participants DataFrame
-data_processor = DataPipe()
-data_processor.get_subject_file_pairs()
-data_processor.process_all_subjects()
-
- 
-# ## Then the data is processed to run a linear regression and find the P values
-df = data_processor.participants_df
-df['avg cudit'] = (df['cudit total baseline'] + df['cudit total follow-up']) / 2
-
-# Drop irrelevant columns
-df = df.drop(columns=['Baseline File Path', 'Followup File Path'])
-columns_to_exclude = [
-        'gender', 'avg cudit', 'cudit total baseline', 'cudit total follow-up',
-        'audit total baseline', 'audit total follow-up', 'participant_id',
-        'group', 'age at onset first CB use', 'age at onset frequent CB use','age at baseline',
-        'Temporal Fusiform Cortex, posterior division Change', 'Inferior Temporal Gyrus, anterior division Volume Avg']
-
-# Encode categorical columns and drop unnecessary columns
-categorical_cols = df.select_dtypes(include=['object']).columns
-df_encoded = df.copy()
-for col in categorical_cols:
-    df_encoded[col] = df_encoded[col].astype('category').cat.codes
+class CannabisAnalysis:
+    """
+    This class processes neuroimaging and behavioral data, 
+    runs linear regression, computes p-values, and visualizes 
+    top predictive features for CUDIT scores.
+    """
     
-X = df_encoded.drop(columns=columns_to_exclude, errors='ignore')
-y = df_encoded['avg cudit']
+    def __init__(self):
+        """Initialize DataPipe object and load participants' data."""
+        self.data_processor = DataPipe()
+        self.load_data()
 
-# Impute missing values with the mean
-imputer = SimpleImputer(strategy="mean")
-X_imputed = pd.DataFrame(imputer.fit_transform(X), columns=X.columns)
-# Prepare a DataFrame to store results
-results = pd.DataFrame(columns=['Feature', 'R²', 'P-value'])
+    def load_data(self):
+        """Load the dataset, process subject pairs, and extract volumetric data."""
+        print("Loading data and processing subjects...")
+        self.data_processor.get_subject_file_pairs()
+        self.data_processor.process_all_subjects()
+        self.df = self.data_processor.participants_df
+        self.df['avg_cudit'] = (self.df['cudit total baseline'] + self.df['cudit total follow-up']) / 2
 
-# Perform linear regression for each feature with significance testing
-for feature in X_imputed.columns:
-    # Prepare single feature for regression
-    X_feature = X_imputed[[feature]]
-    # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(X_feature, y, test_size=0.4, random_state=20)
-    # Train the model
-    model = LinearRegression()
-    model.fit(X_train, y_train)
-    # Predict and evaluate
-    y_pred = model.predict(X_test)
-    r2 = r2_score(y_test, y_pred)
-    # Use statsmodels for significance testing
-    X_feature_with_const = sm.add_constant(X_feature)  # Add intercept
-    ols_model = sm.OLS(y, X_feature_with_const).fit()
-    if len(ols_model.pvalues) > 1:  # Ensure the p-value for the feature exists
-        p_value = ols_model.pvalues.iloc[1]
-    else:
-        p_value = np.nan
-    new_row = pd.DataFrame({'Feature': [feature], 'R²': [r2], 'P-value': [p_value]})
-    # Check if the new_row is valid before concatenating
-    if not new_row.isna().all(axis=None) and not new_row.empty:
-        results = pd.concat([results, new_row], ignore_index=True)
+    def preprocess_data(self):
+        """
+        Prepares the dataset:
+        - Drops unnecessary columns
+        - Encodes categorical variables
+        - Imputes missing values
+        """
+        print("Preprocessing data...")
 
-# Sort the results by R² in descending order
-results = results.sort_values(by='R²', ascending=False)
-# Display the results
-print("Linear Regression Results with Significance Testing:")
-print(results.head(10))
-# Save results to Excel if needed
-results.to_excel('linear_regression_with_significance.xlsx', index=False)
+        # Drop irrelevant columns
+        columns_to_exclude = [
+            'gender', 'avg_cudit', 'cudit total baseline', 'cudit total follow-up',
+            'audit total baseline', 'audit total follow-up', 'participant_id',
+            'group', 'age at onset first CB use', 'age at onset frequent CB use', 'age at baseline',
+            'Temporal Fusiform Cortex, posterior division Change', 'Inferior Temporal Gyrus, anterior division Volume Avg',
+            'Baseline File Path', 'Followup File Path'
+        ]
 
-# Assuming 'results' DataFrame is already loaded and sorted by R² in descending order
-# Select the top 5 features by R²
-top_5_results = results[results['P-value'] < 0.05].head(5)
+        # Encode categorical columns
+        categorical_cols = self.df.select_dtypes(include=['object']).columns
+        df_encoded = self.df.copy()
+        for col in categorical_cols:
+            df_encoded[col] = df_encoded[col].astype('category').cat.codes
 
-# Create the barplot
-plt.figure(figsize=(10, 6))
-sns.barplot(
-    x=top_5_results['R²'],
-    y=top_5_results['Feature'],
-    palette='viridis'
-)
+        # Select predictor variables (X) and target variable (y)
+        self.X = df_encoded.drop(columns=columns_to_exclude, errors='ignore')
+        self.y = df_encoded['avg_cudit']
 
-# Add title and labels
-plt.title('Top 5 Features by R² Score for Predicting avg cudit Scores with P value < 0.05', fontsize=16)
-plt.xlabel('R² Score', fontsize=12)
-plt.ylabel('Feature', fontsize=12)
+        # Handle missing values using mean imputation
+        imputer = SimpleImputer(strategy="mean")
+        self.X_imputed = pd.DataFrame(imputer.fit_transform(self.X), columns=self.X.columns)
 
-# Adjust layout and show the plot
-plt.tight_layout()
-plt.show()
+    def run_linear_regression(self):
+        """
+        Performs linear regression for each feature with significance testing:
+        - Computes R² scores
+        - Calculates p-values for statistical significance
+        """
+        print("Running linear regression and computing significance values...")
+        results = pd.DataFrame(columns=['Feature', 'R²', 'P-value'])
 
-subject = 112
-baseLine = 'output/registered_output_sub-' + str(subject) + '_ses-BL.nii.gz'
-followUp = 'output/registered_output_sub-' + str(subject) + '_ses-FU.nii.gz'
-data_processor.display_brain_and_difference(baseLine, followUp)
+        for feature in self.X_imputed.columns:
+            X_feature = self.X_imputed[[feature]]
+
+            # Train-test split
+            X_train, X_test, y_train, y_test = train_test_split(X_feature, self.y, test_size=0.4, random_state=20)
+
+            # Train the model
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+
+            # Predict and compute R² score
+            y_pred = model.predict(X_test)
+            r2 = r2_score(y_test, y_pred)
+
+            # Use statsmodels for significance testing
+            X_feature_with_const = sm.add_constant(X_feature)
+            ols_model = sm.OLS(self.y, X_feature_with_const).fit()
+            p_value = ols_model.pvalues.iloc[1] if len(ols_model.pvalues) > 1 else np.nan
+
+            # Append results
+            results = pd.concat([results, pd.DataFrame({'Feature': [feature], 'R²': [r2], 'P-value': [p_value]})], ignore_index=True)
+
+        # Sort by R² value
+        self.results = results.sort_values(by='R²', ascending=False)
+        print("Top 10 Features based on R² Score:")
+        print(self.results.head(10))
+
+        # Save results to an Excel file
+        self.results.to_excel('linear_regression_with_significance.xlsx', index=False)
+
+    def plot_top_features(self, p_threshold=0.05, top_n=5):
+        """
+        Visualizes the top predictive features using a bar plot.
+        Filters by p-value and selects the top N features.
+        """
+        print(f"Visualizing top {top_n} predictive features...")
+        top_features = self.results[self.results['P-value'] < p_threshold].head(top_n)
+
+        plt.figure(figsize=(10, 6))
+        sns.barplot(
+            x=top_features['R²'],
+            y=top_features['Feature'],
+            palette='viridis'
+        )
+
+        plt.title(f'Top {top_n} Features by R² Score for Predicting avg_cudit (p < {p_threshold})', fontsize=16)
+        plt.xlabel('R² Score', fontsize=12)
+        plt.ylabel('Feature', fontsize=12)
+        plt.tight_layout()
+        plt.show()
+
+    def visualize_brain_differences(self, subject_id):
+        """
+        Displays baseline vs. follow-up MRI difference map for a given subject.
+        """
+        print(f"Visualizing brain differences for subject {subject_id}...")
+        base_path = f'output/registered_output_sub-{subject_id}_ses-BL.nii.gz'
+        followup_path = f'output/registered_output_sub-{subject_id}_ses-FU.nii.gz'
+        self.data_processor.display_brain_and_difference(base_path, followup_path)
+
+    def run_analysis(self):
+        """
+        Main function to execute the full pipeline:
+        - Preprocess data
+        - Run regression
+        - Visualize results
+        - Display brain differences for a sample subject
+        """
+        self.preprocess_data()
+        self.run_linear_regression()
+        self.plot_top_features()
+        self.visualize_brain_differences(subject_id=112)
+
+
+def main():
+    analysis = CannabisAnalysis()
+    analysis.run_analysis()
+
+# Run the full analysis
+if __name__ == "__main__":
+    main()
