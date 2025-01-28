@@ -10,11 +10,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from DataPipe import DataPipe
-
 # Suppress warnings related to DataFrame concatenation
 warnings.filterwarnings("ignore", message="The behavior of DataFrame concatenation with empty or all-NA entries")
 
-class CannabisAnalysis:
+class Analysis:
     """
     This class processes neuroimaging and behavioral data, 
     runs linear regression, computes p-values, and visualizes 
@@ -168,7 +167,7 @@ class CannabisAnalysis:
         print(f"Visualizing brain differences for subject {subject_id}...")
         base_path = f'output/registered_output_sub-{subject_id}_ses-BL.nii.gz'
         followup_path = f'output/registered_output_sub-{subject_id}_ses-FU.nii.gz'
-        self.data_processor.display_brain_and_difference(base_path, followup_path)
+        self.data_processor.display_brain_and_difference(base_path, followup_path, subject_id)
 
     def run_analysis(self):
         """
@@ -187,7 +186,7 @@ class CannabisAnalysis:
 
 
 def main():
-    analysis = CannabisAnalysis()
+    analysis = Analysis()
     analysis.run_analysis()
 
 # Run the full analysis

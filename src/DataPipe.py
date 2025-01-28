@@ -3,11 +3,12 @@ import ants
 import logging
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import nibabel as nib
 import matplotlib.pyplot as plt
-from nilearn.plotting import plot_anat, plot_img
 from nilearn.datasets import fetch_atlas_harvard_oxford
-from nilearn.image import math_img, resample_to_img, get_data, load_img
+from nilearn.image import math_img, resample_to_img, get_data, load_img, new_img_like
+from nilearn.plotting import plot_anat, plot_img, plot_stat_map, plot_glass_brain
 
 class DataPipe:
     '''
@@ -366,38 +367,129 @@ class DataPipe:
             
             # Computes differences
             self.findDifferingAreasAndVolume(idx, baseLine, followUp)
-
-    def display_brain_and_difference(self, baseline_file, followup_file):
+    
+    def get_roi_differences_for_subject(self, subject_id):
         """
-        Purpose:
-        •	Displays baseline, follow-up, and difference images using nilearn.
-        •	Uses color maps to highlight changes.
-
-        Steps:
-        1.	Load the baseline and follow-up MRI images.
-        2.	Compute the difference image.
-        3.	Plot:
-        •	Baseline MRI
-        •	Follow-Up MRI
-        •	Difference Map (using coolwarm colormap)
-
+        Returns a dictionary of {RegionName: difference_value} for the given subject.
+        Assumes 'self.participants_df' contains columns like 'Frontal Pole Change', etc.
         """
+
+        # 1. Locate the row for this subject
+        row_mask = self.participants_df['participant_id'] == subject_id
+        if not any(row_mask):
+            print(f"No data found for subject {subject_id}")
+            return {}
+
+        # Extract the row for the subject
+        subject_row = self.participants_df.loc[row_mask].iloc[0]
+
+        # 2. Gather all columns that end with "Change"
+        #    (These columns were created by findDifferingAreasAndVolume)
+        change_columns = ['Frontal Pole Change', 'Parahippocampal Gyrus, posterior division Change', 'Middle Temporal Gyrus, posterior division Volume Change', 'Inferior Temporal Gyrus, temporooccipital part Change']
+
+        # 3. Build a dictionary: region_name -> difference
+        #    Each column has the format "Frontal Pole Change", "Occipital Lobe Change", etc.
+        roi_differences = {}
+        for col in change_columns:
+            # Region name is the column name minus the suffix " Change"
+            region_name = col.replace(" Change", "")
+            roi_differences[region_name] = subject_row[col]
+
+        return roi_differences
+
+    def display_brain_and_difference(self,
+                                    baseline_file,
+                                    followup_file,
+                                    subject_id,
+                                    show_glass_brain=True,
+                                    show_spider_chart=True):
+        """
+        Displays multiple types of visualizations for baseline vs. follow-up MRI:
+        1) Baseline & follow-up anatomical slices
+        2) Simple difference map
+        4) Glass brain (3D transparent) view of the difference
+        6) (Optional) Spider chart of ROI-level changes
+        7) (Optional) Correlation heatmap of ROI-level changes
+        
+        Parameters
+        ----------
+        baseline_file : str
+            Path to the baseline MRI NIfTI file.
+        followup_file : str
+            Path to the follow-up MRI NIfTI file.
+        show_glass_brain : bool
+            If True, shows a glass brain visualization.
+        show_spider_chart : bool
+            If True, attempts to plot a spider chart of ROI-level changes (requires region data).
+        show_correlation_heatmap : bool
+            If True, plots a correlation heatmap of ROI changes (requires ROI data).
+        """
+        print("Loading images...")
         baseline_img = nib.load(baseline_file)
         followup_img = nib.load(followup_file)
 
         baseline_data = baseline_img.get_fdata()
         followup_data = followup_img.get_fdata()
+
+        # Compute the raw difference: followup - baseline
         diff_data = followup_data - baseline_data
         diff_img = nib.Nifti1Image(diff_data, affine=baseline_img.affine)
 
-        # Plot the difference map
-        plot_img(diff_img, title="Difference MRI", cmap='coolwarm', colorbar=True)
+        ############################################
+        # 1) Show Baseline & Follow-Up MRIs
+        ############################################
+        print("Showing baseline and follow-up images...")
+        plot_anat(baseline_img, title="Baseline MRI")
+        plot_anat(followup_img, title="Follow-Up MRI")
         plt.show()
 
-        # Plot the follow-up and baseline images
-        plot_anat(followup_img, title="Follow-Up MRI")
-        plot_anat(baseline_img, title="Baseline MRI")
+        ############################################
+        # 2) Show Simple Difference Map
+        ############################################
+        print("Showing simple difference map (coolwarm)...")
+        plot_img(diff_img, title="Difference MRI (Follow-Up - Baseline)",
+                cmap='coolwarm', colorbar=True)
         plt.show()
+
+        ############################################
+        # 4) Optional: Glass Brain
+        ############################################
+        if show_glass_brain:
+            print("Showing glass brain visualization...")
+            plot_glass_brain(diff_img,
+                            display_mode='lyrz',  # left, y, right, z
+                            threshold=0.1,
+                            cmap='coolwarm',
+                            title='Glass Brain (difference)')
+            plt.show()
+
+        ############################################
+        # 6) (Optional) Spider/Radar Chart of ROI Changes
+        ############################################
+        if show_spider_chart:
+            print("Attempting to create a spider chart of ROI-level changes...")
+            # We assume you have a dictionary or DataFrame with ROI-level changes
+            # For instance: self.roi_differences = { 'ROIName': difference_value, ... }
+            # This is an example with made-up data:
+            example_roi_diffs = self.get_roi_differences_for_subject(subject_id)
+            # Convert to sorted lists
+            rois = list(example_roi_diffs.keys())
+            diffs = list(example_roi_diffs.values())
+
+            # We make a "circular" arrangement for spider chart
+            # One trick is to repeat the first entry at the end
+            rois.append(rois[0])
+            diffs.append(diffs[0])
+
+            # Angles
+            angles = np.linspace(0, 2 * np.pi, len(rois), endpoint=False)
+
+            fig, ax = plt.subplots(subplot_kw={'polar': True}, figsize=(6,6))
+            ax.plot(angles, diffs, 'o-', linewidth=2)
+            ax.fill(angles, diffs, alpha=0.25)
+            ax.set_thetagrids(angles[:-1] * 180 / np.pi, rois[:-1])
+            ax.set_title("Spider Chart of ROI Changes", pad=20)
+            plt.show()
     
     def display_before_registry(self, baseline_file, followup_file):
         """
