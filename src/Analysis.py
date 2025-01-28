@@ -168,6 +168,17 @@ class Analysis:
         base_path = f'output/registered_output_sub-{subject_id}_ses-BL.nii.gz'
         followup_path = f'output/registered_output_sub-{subject_id}_ses-FU.nii.gz'
         self.data_processor.display_brain_and_difference(base_path, followup_path, subject_id)
+    
+    def visualize_brain_differences_registry(self, subject_id):
+        """
+        Displays baseline vs. follow-up MRI difference map for a given subject before and after registry
+        """
+        print(f"Visualizing brain differences for subject {subject_id}...")
+        base_path = f'Data/sub-{subject_id}/ses-BL/anat/sub-{subject_id}_ses-BL_T1w.nii.gz'
+        followup_path = f'Data/sub-{subject_id}/ses-FU/anat/sub-{subject_id}_ses-FU_T1w.nii.gz'
+        base_path_after = f'output/registered_output_sub-{subject_id}_ses-BL.nii.gz'
+        followup_path_after = f'output/registered_output_sub-{subject_id}_ses-FU.nii.gz'
+        self.data_processor.display_before_registry(base_path, followup_path, base_path_after, followup_path_after)
 
     def run_analysis(self):
         """
@@ -180,9 +191,10 @@ class Analysis:
         """
         self.preprocess_data()
         self.run_linear_regression()
-        self.run_random_forest()
         self.plot_top_features()
+        self.run_random_forest()
         self.visualize_brain_differences(subject_id=112)
+        self.visualize_brain_differences_registry(subject_id=103)
 
 
 def main():

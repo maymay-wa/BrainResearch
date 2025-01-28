@@ -491,14 +491,22 @@ class DataPipe:
             ax.set_title("Changes by Region", pad=30)
             plt.show()
     
-    def display_before_registry(self, baseline_file, followup_file):
+    def display_before_registry(self, baseline_file, followup_file, baseline_file_after, followup_file_after):
         """
         Displays the brain images for baseline, follow-up, and their difference.
         """
         baseline_img = nib.load(baseline_file)
         followup_img = nib.load(followup_file)
 
+        baseline_img_after = nib.load(baseline_file_after)
+        followup_img_after = nib.load(followup_file_after)
+
         # Plot the follow-up and baseline images
         plot_img(followup_img, title="Follow-Up MRI Before Registry")
         plot_img(baseline_img, title="Baseline MRI Before Registry")
+        plt.show()
+
+        # Plot the follow-up and baseline images
+        plot_img(baseline_img_after, title="Follow-Up MRI After Registry")
+        plot_img(followup_img_after, title="Baseline MRI After Registry")
         plt.show()
