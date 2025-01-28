@@ -9,7 +9,6 @@ from nilearn.plotting import plot_anat, plot_img
 from nilearn.datasets import fetch_atlas_harvard_oxford
 from nilearn.image import math_img, resample_to_img, get_data, load_img
 
-
 class DataPipe:
     '''
     Responsibilities:
@@ -18,7 +17,6 @@ class DataPipe:
         •	Loads and processes neuroimaging data.
         •	Performs registration of images to a common atlas.
     '''
-
     def __init__(self, data_dir='Data', participants_tsv='Data/participants.tsv'):
         """
         Constructor for the Data class.
