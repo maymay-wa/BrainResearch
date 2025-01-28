@@ -488,7 +488,7 @@ class DataPipe:
             ax.plot(angles, diffs, 'o-', linewidth=2)
             ax.fill(angles, diffs, alpha=0.25)
             ax.set_thetagrids(angles[:-1] * 180 / np.pi, rois[:-1])
-            ax.set_title("Spider Chart of ROI Changes", pad=20)
+            ax.set_title("Changes by Region", pad=30)
             plt.show()
     
     def display_before_registry(self, baseline_file, followup_file):
