@@ -56,4 +56,6 @@ The pipeline exports the results to an Excel file, making it easy to explore and
 
 diagram.py creates the diagram for the project
 
+pDocs was used to create the documentation and diagrams was used to create the architecture diagram
+
 data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
