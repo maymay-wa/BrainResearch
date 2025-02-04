@@ -59,3 +59,9 @@ diagram.py creates the diagram for the project
 pDocs was used to create the documentation and diagrams was used to create the architecture diagram
 
 data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
+
+## **Instructions**
+
+1. Clone the repo
+2. Download the relevant data from the link given above
+3. Run the main.py
