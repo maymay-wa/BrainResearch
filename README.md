@@ -65,6 +65,7 @@ data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
 - dara is expected to be stored in the Data folder in the src folder
 - Further project documentation is found in the docs folder and have been copied to the src folder for convenience
 - tests has tests for the main functions using the pytest module
+- diagram.py is what makes the project structure image
 
 ## **Instructions**
 
@@ -72,4 +73,3 @@ data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
 2. make sure you have all packages in the requirements file installed "pip install -r requirements.txt"
 3. Download the relevant data from the link given above
 4. Run the main.py
-5. 
