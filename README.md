@@ -60,6 +60,11 @@ pDocs was used to create the documentation and diagrams was used to create the a
 
 data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
 
+## **Structure**
+src has the code used to run the project
+dara is expected to be stored in the Data folder in the src folder
+Further project documentation is found in the docs folder and have been copied to the src folder for convenience
+
 ## **Instructions**
 
 1. Clone the repo
