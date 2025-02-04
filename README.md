@@ -69,5 +69,7 @@ data from: https://openneuro.org/datasets/ds000174/versions/1.0.1
 ## **Instructions**
 
 1. Clone the repo
-2. Download the relevant data from the link given above
-3. Run the main.py
+2. make sure you have all packages in the requirements file installed "pip install -r requirements.txt"
+3. Download the relevant data from the link given above
+4. Run the main.py
+5. 
